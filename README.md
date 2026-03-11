@@ -1,108 +1,142 @@
-# Smart Parking Management System
+# 🅿️ Smart Parking Management System
 
-A high-performance, multi-threaded C++17 parking simulation with:
-- **Dijkstra's Algorithm** — routes each car to the nearest free slot
-- **Multi-threading** — 4 entry + 4 exit gate threads with `std::mutex` & `std::condition_variable`
-- **OpenCV ALPR** — license plate region detection pipeline
-- **SQLite3** — persistent entry/exit vehicle logs
-- **Console Display** — real-time grid visualization
+<div align="center">
+
+![C++](https://img.shields.io/badge/C%2B%2B-17-blue?style=for-the-badge&logo=cplusplus)
+![SQLite](https://img.shields.io/badge/SQLite-3-lightgrey?style=for-the-badge&logo=sqlite)
+![OpenCV](https://img.shields.io/badge/OpenCV-4-green?style=for-the-badge&logo=opencv)
+![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
+
+A production-grade **C++ parking management system** with real-time slot tracking, intelligent Dijkstra routing, multi-threaded gate simulation, and a live cyberpunk-themed web dashboard.
+
+![Dashboard Preview](assets/dashboard.png)
+
+</div>
 
 ---
 
-## Project Structure
+## ✨ Features
+
+- 🧠 **Dijkstra's Algorithm** — finds the nearest free slot from any gate in O((V+E) log V)
+- ⚡ **Multi-threaded Gates** — each entry/exit gate runs on its own `std::thread`
+- 🔒 **Thread Safety** — `std::mutex` + `std::condition_variable` for zero busy-waiting
+- 📷 **ALPR** — OpenCV license plate recognition pipeline
+- 🗄️ **SQLite Database** — persistent vehicle entry/exit logs
+- 🌐 **Live Web Dashboard** — cyberpunk-themed UI with real-time stats, polling every second
+
+---
+
+## 🏗️ Architecture
+
+```
+Entry Gate (thread) ──┐
+Entry Gate (thread) ──┤──► ParkingSlotManager ──► Dijkstra Router ──► Assign Slot
+Entry Gate (thread) ──┤         (mutex + cv)
+Entry Gate (thread) ──┘
+                              │
+                         SQLite Log
+                              │
+                    HTTP REST API (cpp-httplib)
+                              │
+                    Web Dashboard (localhost:8080)
+```
+
+---
+
+## 🛠️ Tech Stack
+
+| Component  | Technology                              |
+|------------|-----------------------------------------|
+| Language   | C++17                                   |
+| Routing    | Dijkstra min-heap O((V+E)logV)          |
+| Threading  | std::thread, std::mutex, std::condition_variable |
+| Vision     | OpenCV (ALPR pipeline)                  |
+| Database   | SQLite3                                 |
+| HTTP Server| cpp-httplib (header-only)               |
+| Frontend   | HTML / CSS / JS — cyberpunk dashboard   |
+
+---
+
+## 📁 Project Structure
 
 ```
 SmartParking/
 ├── CMakeLists.txt
 ├── README.md
 ├── src/
-│   ├── main.cpp               # Thread orchestration + simulation
-│   ├── Dijkstra.h / .cpp      # Grid-based shortest path to nearest slot
-│   ├── ParkingSlotManager.h / .cpp  # Thread-safe slot manager
-│   ├── Gate.h / .cpp          # Entry & exit gate logic
-│   ├── ALPR.h / .cpp          # OpenCV license plate detection
-│   ├── Database.h / .cpp      # SQLite3 vehicle log
-│   └── Display.h / .cpp       # Console grid display
-└── build/                     # CMake build output
+│   ├── main.cpp                   # SFML GUI mode
+│   ├── main_server.cpp            # Web server mode
+│   ├── ParkingSlotManager.h/.cpp  # Thread-safe slot manager
+│   ├── Dijkstra.h/.cpp            # Shortest path routing
+│   ├── Gate.h/.cpp                # Entry & exit gate logic
+│   ├── ALPR.h/.cpp                # OpenCV license plate detection
+│   ├── Database.h/.cpp            # SQLite3 vehicle logs
+│   ├── Display.h/.cpp             # Console grid display
+│   ├── GUI.h/.cpp                 # SFML graphical interface
+│   ├── Server.h                   # REST API (cpp-httplib)
+│   └── httplib.h                  # Header-only HTTP library
+└── web/
+    ├── index.html                 # Dashboard UI
+    ├── css/style.css              # Cyberpunk styling
+    └── js/app.js                  # Real-time polling logic
 ```
 
 ---
 
-## Dependencies
+## 🚀 Build & Run
 
-| Library  | Purpose              | Install (Ubuntu)                        |
-|----------|----------------------|-----------------------------------------|
-| OpenCV 4 | ALPR image processing| `sudo apt install libopencv-dev`        |
-| SQLite3  | Vehicle log storage  | `sudo apt install libsqlite3-dev`       |
-| pthread  | Threading (included) | Part of GCC/Clang on Linux              |
-
----
-
-## Build Instructions
-
+### Prerequisites (Ubuntu / WSL)
 ```bash
-# 1. Install dependencies
-sudo apt update
-sudo apt install -y cmake build-essential libopencv-dev libsqlite3-dev
+sudo apt install -y build-essential cmake libopencv-dev libsqlite3-dev libssl-dev
+```
 
-# 2. Build
-cd SmartParking
+### Download httplib (required, not bundled)
+```bash
+curl -o src/httplib.h https://raw.githubusercontent.com/yhirose/cpp-httplib/master/httplib.h
+```
+
+### Build
+```bash
 mkdir build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j$(nproc)
-
-# 3. Run (defaults: 6x8 grid, 30 cars)
-./SmartParking
-
-# Custom: 10x12 grid, 50 cars
-./SmartParking 10 12 50
+cmake .. && make -j$(nproc)
 ```
+
+### Run — Web Server Mode
+```bash
+./SmartParkingServer          # default: 6x8 grid, port 8080
+./SmartParkingServer 8 10 9090  # custom: 8x10 grid, port 9090
+```
+Then open **http://localhost:8080** in your browser 🚀
 
 ---
 
-## Key Design Decisions
+## 🌐 REST API Endpoints
 
-### Thread Synchronization
-- `std::mutex` protects all reads/writes to the slot grid
-- `std::condition_variable` lets entry gate threads **sleep** when the lot is full
-- `cv_.notify_all()` in `releaseSlot()` wakes all sleeping entry gates; each re-checks the predicate
-
-### Dijkstra Routing
-- Grid modelled as a graph: each slot = node, adjacent slots = edges (weight=1)
-- Entry gates at the 4 grid corners; Dijkstra fans outward from each gate
-- First unoccupied node reached = nearest available slot (BFS/Dijkstra property)
-
-### ALPR Pipeline
-- Grayscale → Bilateral filter → Canny edges → Contour detection
-- Aspect ratio filter (2.0–5.5) isolates plate-shaped rectangles
-- Extend with Tesseract OCR for real plate reading (see ALPR.cpp comments)
+| Method | Endpoint       | Description                          |
+|--------|----------------|--------------------------------------|
+| GET    | `/api/status`  | Full lot state as JSON               |
+| GET    | `/api/logs`    | Recent 50 event logs                 |
+| POST   | `/api/entry`   | Simulate car entry `{ "gate": 0 }`   |
+| POST   | `/api/exit`    | Simulate car exit `{ "plate": "..." }`|
+| GET    | `/`            | Serves the web dashboard             |
 
 ---
 
-## Example Output
+## 💡 Interview Talking Points
 
-```
- Smart Parking Management System
+- **Why Dijkstra?** Guarantees shortest path from gate to nearest free slot. Min-heap gives O(log V) per extraction.
+- **Why condition_variable?** Gates sleep when lot is full — zero CPU usage vs busy-waiting.
+- **Why SQLite?** Lightweight embedded DB, no server needed, ACID compliant for concurrent writes.
+- **Thread safety?** Single mutex guards the slot manager. Gates contend only at assignment, not during routing.
 
-Grid: 6x8  (48 slots)  |  30 cars to simulate
+---
 
-[Entry G0] KA-03-XY-4521 → Slot #0   (free: 47)
-[Entry G1] MH-09-AB-8823 → Slot #7   (free: 46)
-[Entry G2] TN-22-PQ-0034 → Slot #40  (free: 45)
-...
+## 📄 License
 
-  Gate0                       Gate1
-  G0   0  1  2  3  4  5  6  7 G1
-     ------------------------
- 0 | [X][X][ ][ ][ ][ ][X][X] |
- 1 | [X][ ][ ][ ][ ][ ][ ][X] |
-...
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
-Occupancy: [############################--------] 30/48  (18 free)
+---
 
-====== Recent Vehicle Logs ======
-Plate           Slot   Gate   Entry       Exit
-------------------------------------------------------
-KA-03-XY-4521   0      0      14:23:01    14:23:08
-...
-```
+<div align="center">
+Made with ❤️ and C++17
+</div>
