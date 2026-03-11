@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Parking System</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<div id="app">
+
+    <!-- ===== HEADER ===== -->
+    <header>
+        <div class="header-brand">
+            <div class="brand-icon">🅿</div>
+            <div>
+                <div class="brand-title">Smart Parking</div>
+                <div class="brand-sub">Real-time Management System · C++17</div>
+            </div>
+        </div>
+        <div class="header-status">
+            <div class="live-badge">
+                <div class="live-dot" id="live-dot"></div>
+                Live
+            </div>
+            <div class="clock" id="clock">00:00:00</div>
+        </div>
+    </header>
+
+    <!-- ===== MAIN ===== -->
+    <main>
+
+        <!-- Stat cards -->
+        <div class="stats-row">
+            <div class="stat-card cyan">
+                <div class="stat-label">Total Slots</div>
+                <div class="stat-value" id="stat-total">—</div>
+                <div class="stat-sub">Capacity</div>
+            </div>
+            <div class="stat-card red">
+                <div class="stat-label">Occupied</div>
+                <div class="stat-value" id="stat-used">—</div>
+                <div class="stat-sub">Vehicles inside</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-label">Available</div>
+                <div class="stat-value" id="stat-avail">—</div>
+                <div class="stat-sub">Open slots</div>
+            </div>
+            <div class="stat-card yellow">
+                <div class="stat-label">Occupancy</div>
+                <div class="stat-value" id="stat-pct">—</div>
+                <div class="stat-sub">Utilization rate</div>
+            </div>
+        </div>
+
+        <!-- Occupancy bar -->
+        <div class="occ-bar-wrap">
+            <div class="occ-bar-header">
+                <span class="occ-bar-label">Occupancy</span>
+                <span class="occ-pct" id="occ-pct">0%</span>
+            </div>
+            <div class="occ-bar-track">
+                <div class="occ-bar-fill" id="occ-fill" style="width:0%"></div>
+            </div>
+        </div>
+
+        <!-- Parking grid -->
+        <div class="grid-section">
+            <div class="grid-section-header">
+                <span class="section-title">Parking Grid</span>
+                <div class="grid-legend">
+                    <div class="legend-item">
+                        <div class="legend-dot free"></div> Free
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot occupied"></div> Occupied
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot flash"></div> Changed
+                    </div>
+                </div>
+            </div>
+            <div id="parking-grid"></div>
+        </div>
+
+    </main>
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside>
+
+        <!-- Controls -->
+        <div class="sidebar-section">
+            <div class="sidebar-title">Controls</div>
+
+            <div class="controls">
+                <button class="btn btn-entry" onclick="triggerEntry()">
+                    ▲ Entry
+                </button>
+                <button class="btn btn-exit" onclick="triggerExit()">
+                    ▼ Exit
+                </button>
+                <button class="btn btn-sim" onclick="simulateBurst()">
+                    ⚡ Simulate 5 Entries
+                </button>
+                <button class="btn btn-clear" onclick="clearAll()">
+                    ✕ Clear All Vehicles
+                </button>
+            </div>
+
+            <div class="gate-select-row">
+                <span class="gate-select-label">Gate:</span>
+                <div class="gate-btns">
+                    <button class="gate-btn active" onclick="selectGate(0)">G0</button>
+                    <button class="gate-btn"        onclick="selectGate(1)">G1</button>
+                    <button class="gate-btn"        onclick="selectGate(2)">G2</button>
+                    <button class="gate-btn"        onclick="selectGate(3)">G3</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Event log -->
+        <div class="log-section">
+            <div class="log-title">Event Log</div>
+            <div id="log-list"></div>
+        </div>
+
+    </aside>
+
+    <!-- ===== FOOTER ===== -->
+    <footer>
+        <span>Smart Parking System · <span class="accent">C++17</span> · Dijkstra Routing · SQLite3</span>
+        <span>Polling: <span class="accent">1.2s</span> · Threads: <span class="accent">std::thread + condition_variable</span></span>
+    </footer>
+
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>
